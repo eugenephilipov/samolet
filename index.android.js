@@ -88,7 +88,8 @@ export class ImageObj extends Component {
 */
 
 var box = {};
-box.width = (game_component.standard.bottom * 2 * 10);
+
+box.width = (game_component.standard.bottom * 2 * 3);
 box.height = box.width;
 box.x0 = -box.width / 2 + game_component.standard.right / 2;
 box.y0 = -box.height / 2 + game_component.standard.bottom / 2;
@@ -111,20 +112,22 @@ box.bomb_distance = (box.screen_height / 12) * 2;
 console.log('startXXXXXXXXXXXXXXXXXXXXXX: bottom:' + game_component.standard.bottom + ';right:' + game_component.standard.right + ';box.x0:' + box.x0 + ';box.height:' + box.height + ';box.width:' + box.width + ';box.screen_height' + box.screen_height + ';box.screen_width:' + box.screen_width);
 
 var flight = {};
-flight.refresh_msec = 100;//0.2;
+flight.refresh_msec = 500;//0.2;
 flight.koef = 0; // height or Y koef 
 flight.koef_x = 0;// left right speed koef
-flight.const_speed = 40;
-flight.max_height = 10000;
+flight.const_speed = 10;//40
+flight.const_speed_x = 2;//40
+flight.max_height = 10000;//10000
 flight.correction_koef = flight.max_height / 1000;
 flight.height = 10;
 flight.x = 0;//-box.ground_max_x/2-box.screen_width/2;//box.center_x+350//game_component.standard.bottom*10;//box.ground_center_x;
 flight.ground_move_x = 0;
 flight.ground_move_speed_koef = 1;
-flight.scaling = 0.1;
+flight.scaling = 0.3;
 flight.x_correction = 0;
 flight.y_correction = 0;
-flight.ground_move_msec = 100000;
+//flight.ground_move_msec = 100000;
+flight.ground_move_msec = 100000/3;
 flight.speed = box.height / flight.ground_move_msec;
 flight.bomb_speed = flight.speed;
 
@@ -132,7 +135,7 @@ flight.calc_scaling = () => {
   //flight.scaling=1;  
   flight.scaling = flight.height / flight.max_height;
   if (flight.scaling > 1) flight.scaling = 1;
-  if (flight.scaling < 0) flight.scaling = 0;
+  if (flight.scaling < 0.3) flight.scaling = 0.3;
 }
 flight_correction_of_scale = () => {
   var mk = 1;
@@ -168,7 +171,7 @@ flight.calc_height = () => {
   //if (flight.max_height<=flight.koef*flight.const_speed && flight.koef*flight.const_speed>=0)
   flight.height = flight.height + flight.koef * flight.const_speed;
   if (flight.max_height <= flight.height) flight.height = flight.max_height;
-  if (flight.height < (0.1 * flight.max_height)) flight.height = 0.1 * flight.max_height;
+  if (flight.height < (0.3 * flight.max_height)) flight.height = 0.3 * flight.max_height;
   //flight.calc_scaling();
 
   flight_correction_of_scale();
@@ -177,7 +180,7 @@ flight.calc_height = () => {
 };
 flight.calc_x = () => {
 
-  flight.x = flight.x + flight.koef_x * flight.const_speed;//- flight.scaling*flight.koef_x*flight.const_speed
+  flight.x = flight.x + flight.koef_x * flight.const_speed_x;//- flight.scaling*flight.koef_x*flight.const_speed
   //if (box.ground_max_x<flight.x) flight.x=0;
   //if (flight.x<0) flight.x=box.ground_max_x;
   flight_correction_of_scale();
@@ -202,6 +205,7 @@ flight.ground_move = () => {
 var cur_value = { y: 0 };
 
 draw_many_objects = () => {
+  //return ;
   var step_x = 778;//778
   var step_y = 1000;//  
   var count = 0;
@@ -278,7 +282,7 @@ export default class AwesomeProject extends Component {
     this.animatedGroundMove = new Animated.Value(-box.ground_max_y / 2);
     this.animatedGroundMoveCompens = new Animated.Value(0);
 
-    for (let i = 0; i <= 2; i++) {
+    for (let i = 0; i <= 3; i++) {
       this.bombs.push({
         animatedBomb: new Animated.Value(0.1),
         animatedBombY: new Animated.Value(-box.ground_max_x / 2),
@@ -329,9 +333,10 @@ export default class AwesomeProject extends Component {
     }
     );
 
-
+    this.set_move();
     this.ground_move(-box.ground_max_y / 2, box.ground_max_y / 2, flight.ground_move_msec, this.animatedGroundMove);
     //this.loadImage();
+
 
     //this.ground_move(-box.ground_max_y/2,box.ground_max_y/2,flight.ground_move_msec,this.animatedGroundMove);
     this._panResponder = PanResponder.create({
@@ -350,6 +355,7 @@ export default class AwesomeProject extends Component {
         // if (!game_component.main_service.check_point_match(this.button_fireXY.x0,this.button_fireXY.dx,this.button_fireXY.y0,this.button_fireXY.dy,gestureState.x0,gestureState.y0))          
         this.player_gesture_last = { x: 0, y: 0 };
         this.player_gesture_last_target = 0;
+//        this.set_move();
       },
       onPanResponderMove: (evt, gestureState) => {
         //console.log('touchH:'+evt.touchHistory.touchBank.length)       
@@ -379,8 +385,8 @@ export default class AwesomeProject extends Component {
 
         //console.log ('flight.height:'+flight.height + 'flight.scaling:' +flight.scaling+ ';flight.x_correction:' + (-1*flight.x_correction) + 'koef_x:' + flight.koef_x + ';current_y:' + this.cur_value.x + ';box.ground_center_x' + box.ground_center_x );
         //this.animatedX.setValue(flight.x_correction);
-        //this.animatedY.setValue(flight.y_correction);
-
+        this.animatedY.setValue(flight.y_correction);
+        //flight.calc_scaling();
         this.animatedScaling.setValue(flight.scaling);
         this.animatedScalingCom.setValue(1 / flight.scaling);
 
@@ -521,6 +527,7 @@ export default class AwesomeProject extends Component {
     this.animatedY.setValue(flight.y_correction);
 
     this.animatedScaling.setValue(flight.scaling);
+    //this.animatedScaling.setValue(0.9);
     this.animatedScalingCom.setValue(1 / flight.scaling);
     this.animatedGroundMoveX.setValue(flight.x);
 
@@ -771,6 +778,8 @@ export default class AwesomeProject extends Component {
     //const ccx= this.animatedGroundMove-100; 
     /*
     
+
+
     <Image  source={ require('./images/map.png') }
                   style={{                              
                     position: 'absolute',
@@ -797,7 +806,11 @@ export default class AwesomeProject extends Component {
     const allenemyobj = animated_images.map((item, index) => {
       return (this.renderAnimatedImageOpacity(item.obj, item.top, item.left, index))
     })
-
+  
+  const allenemyobj2 = new Array();
+   for (let i=0;i<3;i++){
+     allenemyobj2.push(this.renderAnimatedImageOpacity(animated_images[i].obj, animated_images[i].top, animated_images[i].left, i))
+   }
 
 
 
@@ -868,7 +881,21 @@ export default class AwesomeProject extends Component {
               {allenemyobj}
 
             </Animated.View>
-{bombing_anim}
+            <Animated.View style={{
+              backgroundColor: 'rgb(45, 191, 40)',
+              position: 'absolute',
+              height: box.height/3,
+              width: box.width,
+              flex: 1,
+              left:  this.animatedGroundMoveX,
+              top: Animated.add(this.animatedGroundMove,box.ground_max_y),
+
+            }} >
+              {allenemyobj2}
+
+            </Animated.View>
+            
+            {bombing_anim}
 
           </Animated.View>
 
